@@ -13,9 +13,9 @@ class ChannelSplit():
         self.prob = prob
     def __call__(self, img):
         if random.random() < self.prob:
-            img = self._color_global(img, color_resolution[self.res], choise=1, skip=self.skip)
+            img = self._color_global(img, color_resolution[self.res], choice=1, skip=self.skip)
         return img
-    def _color_global(self, image, resolution=128, choise=2, skip=False):
+    def _color_global(self, image, resolution=128, choice=2, skip=False):
         image = np.array(image)
         image = np.transpose(image, (2, 0, 1))
         _skip = 0
@@ -32,22 +32,22 @@ class ChannelSplit():
                         continue
                     f_b = np.multiply(image[2], (resolution * b <= image[2]) & ((resolution * (b + 1) - 1) >= image[2]))
                     result.append(np.stack((f_r, f_g, f_b)))
-        result = np.array(sample(result, choise), dtype=np.uint8)
+        result = np.array(sample(result, choice), dtype=np.uint8)
         result = np.transpose(np.squeeze(result, axis=0), (1, 2, 0))
         result = Image.fromarray(result)
         return result
 
 class ChannelSplit2():
-    def __init__(self, res, choise, skip, prob):
+    def __init__(self, res, choice, skip, prob):
         self.res = res
-        self.choise = choise
+        self.choice = choice
         self.skip = skip
         self.prob = prob
     def __call__(self, img):
         if random.random() < self.prob:
-            img = self._color_global(img, color_resolution_v2[self.res], choise=self.choise, skip=self.skip, sum=True)
+            img = self._color_global(img, color_resolution_v2[self.res], choice=self.choice, skip=self.skip, sum=True)
         return img
-    def _color_global(self, image, resolution=128, choise=2, skip=False, sum=False):
+    def _color_global(self, image, resolution=128, choice=2, skip=False, sum=False):
         image = np.array(image)
         image = np.transpose(image, (2, 0, 1))
         _skip = 0
@@ -70,7 +70,7 @@ class ChannelSplit2():
                 continue
             result.append(np.stack((np.array(f_r[f]), np.array(f_g[f]), np.array(f_b[f]))))
 
-        result = np.array(sample(result, choise), dtype=np.uint8)
+        result = np.array(sample(result, choice), dtype=np.uint8)
         if sum:
             result = result.sum(axis=0)
             result = np.expand_dims(result, axis=0)

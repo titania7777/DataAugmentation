@@ -33,7 +33,7 @@ parser.add_argument('--aug_type', default='original', type=str, help='original, 
 parser.add_argument('--aug_prob', default=0.5, type=float, help='Aug Prob')
 parser.add_argument('-r', '--resolution', default='x8', type=str, help='ChannelSplit Resolution[(v1)x1, x8, x64, x512 /(v2)x1, x2, x4, x8]')
 parser.add_argument('--skip', default=False, type=bool, help='ChannelSplit Skip')
-parser.add_argument('--choise', default=1, type=int, help='Channel Split number of Channels')
+parser.add_argument('--choice', default=1, type=int, help='Channel Split number of Channels')
 parser.add_argument('-j', '--workers', default=1, type=int, metavar='N', help='Workers')
 parser.add_argument('--epochs', default=300, type=int, metavar='N', help='Epochs')
 parser.add_argument('-b', '--batch_size', default=256, type=int, metavar='N', help='Batch_size')
@@ -60,7 +60,7 @@ def main():
     # args.aug_prob
     # args.resolution
     # args.skip
-    # args.choise
+    # args.choice
 
     transform = [
         transforms.RandomCrop(32, padding=4),
@@ -69,7 +69,7 @@ def main():
     if args.aug_type == 'channelsplit':
         transform.append(ChannelSplit(args.resolution, args.skip, args.prob))
     if args.aug_type == 'channelsplit2':
-        transform.append(ChannelSplit2(args.resolution, args.choise, args.skip, args.prob))
+        transform.append(ChannelSplit2(args.resolution, args.choice, args.skip, args.prob))
     if args.aug_type == 'decalcomanie':
         transform.append(Decalcomanie())
     if args.aug_type == 'dropin':
