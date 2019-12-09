@@ -72,12 +72,14 @@ def main():
         transform.append(ChannelSplit2(args.resolution, args.choice, args.skip, args.prob))
     if args.aug_type == 'decalcomanie':
         transform.append(Decalcomanie())
-    if args.aug_type == 'dropin':
-        transform.append(Dropin(1, 8))
     if args.aug_type == 'puzzle':
         transform.append(Puzzle())
     transform.append([
         transforms.ToTensor(),
+    ])
+    if args.aug_type == 'dropin':
+        transform.append(Dropin(1, 8))
+    transform.append([
         normalize,
     ])
 

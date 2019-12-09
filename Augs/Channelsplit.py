@@ -1,22 +1,22 @@
 import numpy as np
 import random
 from random import sample
+import torch
 from PIL import Image, ImageEnhance, ImageOps
 #Resolution
 color_resolution = {'x1': 256, 'x8': 128, 'x64': 64, 'x512': 32}
 color_resolution_v2 = {'x1': 256, 'x2': 128, 'x4': 64, 'x8': 32}
 
 class ChannelSplit():
-    def __init__(self, res, skip, prob):
+    def __init__(self, res, choice):
         self.res = res
-        self.skip = skip
-        self.prob = prob
+        self.choice = choice
     def __call__(self, img):
-        if random.random() < self.prob:
-            img = self._color_global(img, color_resolution[self.res], choice=1, skip=self.skip)
+        if random.random() < 0.5:
+            img = self._color_global(img, color_resolution[self.res], choice=self.choice, skip=False)
         return img
     def _color_global(self, image, resolution=128, choice=2, skip=False):
-        image = np.array(image)
+        image = np.array(image)*255
         image = np.transpose(image, (2, 0, 1))
         _skip = 0
         if resolution == 256:
@@ -34,21 +34,18 @@ class ChannelSplit():
                     result.append(np.stack((f_r, f_g, f_b)))
         result = np.array(sample(result, choice), dtype=np.uint8)
         result = np.transpose(np.squeeze(result, axis=0), (1, 2, 0))
-        result = Image.fromarray(result)
         return result
 
 class ChannelSplit2():
-    def __init__(self, res, choice, skip, prob):
+    def __init__(self, res, choice):
         self.res = res
         self.choice = choice
-        self.skip = skip
-        self.prob = prob
     def __call__(self, img):
-        if random.random() < self.prob:
-            img = self._color_global(img, color_resolution_v2[self.res], choice=self.choice, skip=self.skip, sum=True)
+        if random.random() < 0.5:
+            img = self._color_global(img, color_resolution_v2[self.res], choice=self.choice, skip=False, sum=True)
         return img
     def _color_global(self, image, resolution=128, choice=2, skip=False, sum=False):
-        image = np.array(image)
+        image = np.array(image)*255
         image = np.transpose(image, (2, 0, 1))
         _skip = 0
         if resolution == 256 or resolution == 128:
@@ -70,10 +67,9 @@ class ChannelSplit2():
                 continue
             result.append(np.stack((np.array(f_r[f]), np.array(f_g[f]), np.array(f_b[f]))))
 
-        result = np.array(sample(result, choice), dtype=np.uint8)
+        result = np.array(sample(result, choice))
         if sum:
             result = result.sum(axis=0)
             result = np.expand_dims(result, axis=0)
-        result = np.transpose(np.squeeze(result, axis=0), (1, 2, 0))
-        result = Image.fromarray(result.astype(np.uint8))
+        result = np.transpose(np.squeeze(result, axis=0), (1, 2, 0)).astype(np.uint8)
         return result
