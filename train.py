@@ -15,11 +15,10 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
 import resnet as RN
-import utils
 import numpy as np
 import warnings
 
-from Augs.Channelsplit import ChannelSplit, ChannelSplit2
+from Augs.Channelsplit import ChannelSplit, ChannelSplit2, ChannelMix
 from Augs.Decalcomanie import Decalcomanie
 from Augs.Dropin import Dropin
 from Augs.Puzzle import Puzzle
@@ -28,9 +27,9 @@ warnings.filterwarnings("ignore")
 model_names = sorted(name for name in models.__dict__ if name.islower() and not name.startswith("__") and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='Augmentations Train')
-parser.add_argument('--net_type', default='resnet', type=str, help='resnet50, resnet101')
+parser.add_argument('--net_type', default='resnet50', type=str, help='resnet50, resnet101')
 parser.add_argument('--aug_type', default='original', type=str, help='original, channelsplit, channelsplitv2, decalcomanie, dropin, puzzle')
-parser.add_argument('--aug_prob', default=0.5, type=float, help='Aug Prob')
+parser.add_argument('--aug_prob', default=0.7, type=float, help='Aug Prob')
 parser.add_argument('-r', '--resolution', default='x8', type=str, help='ChannelSplit Resolution[(v1)x1, x8, x64, x512 /(v2)x1, x2, x4, x8]')
 parser.add_argument('--skip', default=False, type=bool, help='ChannelSplit Skip')
 parser.add_argument('--choice', default=1, type=int, help='Channel Split number of Channels')
@@ -39,7 +38,7 @@ parser.add_argument('--epochs', default=300, type=int, metavar='N', help='Epochs
 parser.add_argument('-b', '--batch_size', default=256, type=int, metavar='N', help='Batch_size')
 parser.add_argument('--lr', '--learning-rate', default=0.25, type=float, metavar='LR', help='Learning Rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M', help='Momentum')
-parser.add_argument( '--wd', '--weight-decay', default=1e-4, type=float, metavar='W', help='Weight Decay')
+parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float, metavar='W', help='weight decay (default: 1e-4)')
 parser.add_argument('-p', '--print-freq', default=98, type=int, metavar='N', help='Print Frequency')
 parser.add_argument('--bottleneck', default=True, type=bool, help='Bottleneck')
 parser.add_argument('--dataset', dest='dataset', default='cifar100', type=str, help='cifar10, cifar100')
@@ -47,6 +46,7 @@ parser.add_argument('--save_path', default='./models', type=str, help='Save Mode
 
 best_err1 = 100
 best_err5 = 100
+
 
 def main():
     global args, best_err1, best_err5, temp
@@ -62,28 +62,34 @@ def main():
     # args.skip
     # args.choice
 
-    transform = [
+    # transform = [
+    #     transforms.RandomCrop(32, padding=4),
+    #     transforms.RandomHorizontalFlip(),
+    # ]
+    # if args.aug_type == 'channelsplit':
+    #     transform.append(ChannelSplit(args.resolution, args.skip, args.aug_prob))
+    # if args.aug_type == 'channelsplit2':
+    #     transform.append(ChannelSplit2(args.resolution, args.choice, args.skip, args.aug_prob))
+    # if args.aug_type == 'decalcomanie':
+    #     transform.append(Decalcomanie())
+    # if args.aug_type == 'puzzle':
+    #     transform.append(Puzzle())
+    # transform.append([
+    #     transforms.ToTensor(),
+    # ])
+    # if args.aug_type == 'dropin':
+    #     transform.append(Dropin(1, 8))
+    # transform.append([
+    #     normalize
+    # ])
+
+    transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip(),
-    ]
-    if args.aug_type == 'channelsplit':
-        transform.append(ChannelSplit(args.resolution, args.skip, args.prob))
-    if args.aug_type == 'channelsplit2':
-        transform.append(ChannelSplit2(args.resolution, args.choice, args.skip, args.prob))
-    if args.aug_type == 'decalcomanie':
-        transform.append(Decalcomanie())
-    if args.aug_type == 'puzzle':
-        transform.append(Puzzle())
-    transform.append([
+        ChannelMix(res='x4', choice=4, prob=1, ver=2, beta=10, width=3),
         transforms.ToTensor(),
+        normalize
     ])
-    if args.aug_type == 'dropin':
-        transform.append(Dropin(1, 8))
-    transform.append([
-        normalize,
-    ])
-
-    transform_train = transforms.Compose(transform)
     transform_test = transforms.Compose([
         transforms.ToTensor(),
         normalize
@@ -137,14 +143,14 @@ def main():
             best_err5 = err5
 
         print('Current best accuracy (top-1 and 5 error):', best_err1, best_err5)
-        save_checkpoint({
-            'epoch': epoch,
-            'arch': args.net_type,
-            'state_dict': model.state_dict(),
-            'best_err1': best_err1,
-            'best_err5': best_err5,
-            'optimizer': optimizer.state_dict(),
-        }, is_best)
+        # save_checkpoint({
+        #     'epoch': epoch,
+        #     'arch': args.net_type,
+        #     'state_dict': model.state_dict(),
+        #     'best_err1': best_err1,
+        #     'best_err5': best_err5,
+        #     'optimizer': optimizer.state_dict(),
+        # }, is_best)
 
     # print('Best accuracy (top-1 and 5 error):', best_err1, best_err5)
     # o = open('logging.txt', 'a')

@@ -4,11 +4,12 @@ from random import sample
 from PIL import Image, ImageEnhance, ImageOps
 
 class Decalcomanie():
-    def __call__(self, img):
-        if random.random() < 0.5:
+    def __call__(self, img, prob=0.5):
+        if random.random() < prob:
             img = self._decalcomanie(img)
         return img
     def _decalcomanie(self, image):
+        #pillow image => pillow image        
         image = np.array(image)
         image = np.transpose(image, (2, 0, 1))
         lam = np.random.randint(4, size=1)
